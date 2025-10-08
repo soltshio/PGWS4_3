@@ -61,6 +61,7 @@ Shader "Custom/Shader_16_MyShader"
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.normal=TransformObjectToWorldNormal(IN.normal);
                 OUT.tangent=float4(TransformObjectToWorldNormal(float3(IN.tangent.xyz)).xyz,IN.tangent.w);
+                OUT.uv = TRANSFORM_TEX(IN.uv, _BaseMap);
                 OUT.position=TransformObjectToWorld(IN.positionOS.xyz);
                 return OUT;
             }
@@ -130,7 +131,9 @@ Shader "Custom/Shader_16_MyShader"
                 half3 specular=saturate(_SpecularColor*D*G*F/(4*LdotN*VdotN));
 
                 half3 color=light.color*LdotN*lerp(diffuse,specular,_Metallic);
-                color += _Emission;//î≠çs
+                color += _Emission;//î≠åı
+
+                half4 uvColor=SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv);
 
                 return half4(color,1);
             }
