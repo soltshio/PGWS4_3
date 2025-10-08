@@ -135,7 +135,7 @@ Shader "Custom/Shader_16_MyShader"
 
                 half4 uvColor=SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv);
 
-                return half4(color,1);
+                return uvColor*half4(color,1);
             }
             ENDHLSL
         }
