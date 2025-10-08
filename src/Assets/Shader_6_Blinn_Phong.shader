@@ -58,13 +58,13 @@ Shader "Custom/Shader_6_Blinn_Phong"
                 half3 normal=normalize(IN.normal);
                 half3 view_direction=normalize(TransformViewToWorld(float3(0,0,0))-IN.position);
                 float3 half_vector=normalize(view_direction+light.direction);
-                //half HdotN=max()
+                half HdotN=max(0,dot(half_vector,normal));
 
                 float3 reflected_direction=-light.direction+2*normal*dot(light.direction,normal);
 
                 half3 ambient=_BaseColor.rgb;
                 half3 lambert=_BaseColor.rgb*max(0,dot(IN.normal,light.direction));
-                half3 specular=_SpecularIntensity*pow(max(0,dot(reflected_direction,view_direction)),_SpecularPower);
+                half3 specular=_SpecularIntensity*pow(HdotN,_SpecularPower);
 
                 half3 color=light.color*(specular+lerp(lambert,ambient,_AmbientRate));
 
