@@ -81,7 +81,7 @@ Shader "Custom/Shader_8_Anisotropic"
 
                 half3 ambient=_BaseColor.rgb;
                 half3 lambert=_BaseColor.rgb*LdotN;
-                 half c=(XdotH*XdotH/alphaX*alphaX)+YdotH*YdotH/(alphaY*alphaY)/(HdotN*HdotN);
+                 half c=(XdotH*XdotH/(alphaX*alphaX)+YdotH*YdotH/(alphaY*alphaY))/(HdotN*HdotN);
                 half3 specular=_SpecularColor*exp(-c)/sqrt(LdotN*VdotN)/(4*PI*alphaX*alphaY);
 
                 half3 color=light.color* lerp(lerp(lambert,ambient,_AmbientRate),specular,_Metallic);
