@@ -1,12 +1,13 @@
 Shader "Custom/Shader_11_Beckmann"
 {
-     Properties
-    {
-        _Fresnel0("Fresnel0",Range(0,0.99999))=0.8
-    }
+   Properties
+   {
+        [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
+        _Roughness("Roughness",Range(0,1))=0.4
+   }
 
-    SubShader
-    {
+   SubShader
+   {
         Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" }
 
         Pass
@@ -34,14 +35,16 @@ Shader "Custom/Shader_11_Beckmann"
                 float3 position:TEXCOORDO;
             };
 
-            
             CBUFFER_START(UnityPerMaterial)
-               half _Fresnel0;
+               half4 _BaseColor;
+               
+                half _Roughness;
             CBUFFER_END
 
+           
             Varyings vert(Attributes IN)
             {
-                Varyings OUT;
+               Varyings OUT;
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 OUT.normal=TransformObjectToWorldNormal(IN.normal);
                 OUT.tangent=float4(TransformObjectToWorldNormal(float3(IN.tangent.xyz)).xyz,IN.tangent.w);
@@ -54,21 +57,22 @@ Shader "Custom/Shader_11_Beckmann"
                 Light light=GetMainLight();
                 half3 normal=normalize(IN.normal);
                 half3 view_direction=normalize(TransformViewToWorld(float3(0,0,0))-IN.position);
-                float3 half_vector=normalize(view_direction+light.direction);
+                float3 half_vector=normalize(light.direction+view_direction);
 
                 half VdotN=max(0,dot(view_direction,normal));
-                half LdotN=max(0,dot(light.direction,normal));
+                half LdotN=max(0.00001,dot(light.direction,normal));
                 half HdotN=max(0,dot(half_vector,normal));
-                half LdotH=max(0,dot(half_vector,light.direction));
-                half VdotH=max(0,dot(half_vector,view_direction));
 
-                half G=min(1,2*min(HdotN*VdotN/VdotH,HdotN*LdotN/LdotH));
+                half alpha2=_Roughness*_Roughness*_Roughness*_Roughness;
 
-                half3 color=G;
+                float D=exp(-(1-HdotN*HdotN)/(HdotN*HdotN*alpha2))/(4*alpha2*HdotN*HdotN*HdotN*HdotN);
+
+                half3 color=D/(4*LdotN*VdotN);
+                color=saturate(color);
 
                 return half4(color,1);
             }
             ENDHLSL
         }
-    }
+   }
 }
