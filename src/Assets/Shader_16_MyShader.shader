@@ -61,6 +61,47 @@ Shader "Custom/Shader_16_MyShader"
                 return OUT;
             }
 
+            half FresnelReflectanceAverageDielectric(float co,float f0,float f90)
+            {
+                co=min(0.9999,max(0.000001,co));
+
+                float root_f0=sqrt(f0);
+                float root_f90=sqrt(f90);
+                float n=(root_f90+root_f0)/(root_f90-root_f0);
+                float n2=n*n;
+
+                float si2=1-co*co;
+                float nb=sqrt(n2-si2);
+                float bn=nb/n2;
+
+                float r_s=(co-nb)/(co+nb);
+                float r_p=(co-bn)/(co+bn);
+                return 0.5*f90*(r_s*r_s+r_p*r_p);
+            }
+
+            half Fresnel(half f0,half f90,float co)
+            {
+                return f0+(f90-f0)*pow(1-co,5);//Schlick‹ßŽ—
+            }
+
+            half3 Fr_DisneyDiffuse(half3 albedo,half LdotN,half VdotN,half LdotH,half linearRoughness)
+            {
+                half energyBias=lerp(0.0,0.5,linearRoughness);
+                half energyFactor=lerp(1.0,1.0/1.51,linearRoughness);
+                half Fd90=energyBias+2.0*LdotH*LdotH*linearRoughness;
+                half FL=Fresnel(1,Fd90,LdotN);
+                half FV=Fresnel(1,Fd90,VdotN);
+                return (albedo*FL*FV*energyFactor);
+            }
+
+            float V_SmithGGXCorrelated(float NdotL,float NdotV,float alphaG2)
+            {
+
+                float Lambda_GGXV=NdotL*sqrt((-NdotV*alphaG2+NdotV)*NdotV+alphaG2);
+                float Lambda_GGXL=NdotV*sqrt((-NdotV*alphaG2+NdotL)*NdotL+alphaG2);
+                return 0.5f/(Lambda_GGXV+Lambda_GGXL);
+            }
+
             half4 frag(Varyings IN) : SV_Target
             {
                 Light light=GetMainLight();
